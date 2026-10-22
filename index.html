@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guitarra</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <section id="landing" class="landing">
+      <h1>Guitarra</h1>
+      <p class="tagline">Play along. It listens, and waits for you.</p>
+
+      <article class="exercise">
+        <h2 id="ex-title"></h2>
+        <p id="ex-desc"></p>
+        <div class="row"><span class="label">Chords</span><span id="ex-chords"></span></div>
+        <div class="row"><span class="label">Each bar</span><span id="ex-pattern" class="pattern"></span></div>
+        <div class="row"><span class="label">Tempo</span><span id="ex-bpm"></span></div>
+        <p id="ex-best" class="muted"></p>
+        <button id="play-btn" class="play-btn">Play <span>↵</span></button>
+      </article>
+
+      <ul class="tips">
+        <li>Sit close to your computer's mic. Allow microphone access when asked.</li>
+        <li>Notes scroll toward the line. Play each one as it reaches the line. Miss it and everything waits until you play it.</li>
+        <li>The click starts with your first note. Space pauses, ↑/↓ change the tempo, Esc leaves.</li>
+      </ul>
+    </section>
+
+    <section id="play" class="play" hidden>
+      <canvas id="stage"></canvas>
+      <header class="hud">
+        <div class="hud-left">
+          <button id="exit" class="ghost" aria-label="Leave">✕</button>
+          <div class="tempo">
+            <button id="slower" class="ghost" aria-label="Slower">−</button>
+            <span><b id="bpm">60</b> BPM</span>
+            <button id="faster" class="ghost" aria-label="Faster">+</button>
+          </div>
+          <span id="beat" class="beat"></span>
+        </div>
+        <div class="hud-center">
+          <div id="status" class="status"></div>
+          <div id="heard" class="heard"></div>
+        </div>
+        <div class="hud-right">
+          <div class="stat"><b id="streak">0</b><small>streak</small></div>
+          <div class="stat"><b id="accuracy">–</b><small>on time</small></div>
+          <div class="stat"><b id="loops">0</b><small>loops</small></div>
+          <div class="mic" title="Microphone level"><span>🎙</span><div class="meter"><div id="level"></div></div></div>
+          <button id="pause" class="ghost" aria-label="Pause">❚❚</button>
+        </div>
+      </header>
+    </section>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
