@@ -1,62 +1,37 @@
 # Guitarra
 
-A small practice app for getting back into guitar, built a little at a time.
+A guitar practice app that listens while you play.
 
-## What it does today
+Pick an exercise and it goes full screen. Notes scroll toward you on a highway with one lane per string. Under the highway, a fretboard shows the chord shape and which finger goes where for the note you play next. The app listens through your computer's mic:
 
-- **Routines**: guided practice sessions made of timed steps. Each step shows instructions, tabs and chord diagrams, can set the metronome, and moves on by itself with a chime. Pick a routine from the menu; the app remembers your choice.
-  - *1. Chords 1: A, D and E*: chord-perfect practice, one-minute changes, strumming on the beat, and the D DU UDU strum pattern.
-  - *2. Fingerpicking 1*: thumb on the bass, p-i-m-a, and pinch patterns over A, D and E.
-- **Road to Blackbird**: routines are grouped into a learning path, with the next stages listed in the app.
-- **Metronome** with an accented first beat that follows each step's tempo (or runs on its own).
-- **Tap counters** for drills like one-minute changes, with best scores kept per drill.
-- **Practice log** of finished sessions, saved in your browser.
+- **It waits for you.** Nothing moves until you play the first note, and then the metronome starts. If a note reaches the line and you haven't played it, everything stops with that note on the line. Play it and everything carries on.
+- **It knows which string you plucked**, even when the other strings are still ringing, as they do in fingerpicking. If you play a wrong note, it tells you what it heard.
+- **Streak, on-time % and loop count** are shown while you play. Your best run is saved.
+
+Today there is one exercise: a p-i-m-a-m-i fingerpicking pattern over A, D, A, E. It is the first step on the road to Blackbird.
 
 ## Run it
 
-No build step. Serve the folder and open it in a browser:
+```sh
+npm start            # python3 -m http.server 8000
+# open http://localhost:8000 and allow the microphone
+```
+
+The mic only works on `localhost` or HTTPS. Keys while playing: Space pauses, ↑/↓ change the tempo, Esc leaves.
+
+## How it works
+
+- `js/audio/analysis.js`: note detection. Every frame it takes an FFT of the mic signal, measures energy per semitone, and scores each possible note by how much *new* energy appeared across its harmonics. This means a freshly plucked note stands out from strings that are still ringing. Pure functions, tested in Node.
+- `js/audio/mic.js`: mic input and the metronome click, on one audio clock.
+- `js/play/session.js`: the play-along rules (ready / playing / waiting / paused, hits, streaks, click scheduling). It doesn't draw or make sound, so it's unit-tested.
+- `js/play/highway.js`: the canvas renderer for the highway, the fretboard and the hit effects.
+- `js/exercises.js`: exercises as data. `fingerpicking(chords, pattern)` builds the notes from chord shapes in `js/chords.js`, so a new pattern or progression is a few lines.
+- `js/main.js`: the landing page, the game loop and the HUD.
+
+## Tests
 
 ```sh
-python3 -m http.server 8000
-# then open http://localhost:8000
+npm test
 ```
 
-(It uses ES modules, so opening `index.html` straight from disk won't work.)
-
-## How routines work
-
-A routine is plain data in `js/routines/`. Each step has a title, a length in minutes, an optional metronome setting, and a list of **blocks**:
-
-```js
-{
-  title: "Pinch",
-  minutes: 7,
-  metronome: { bpm: 60 },
-  blocks: [
-    { type: "text", text: "Thumb and ring finger pluck together..." },
-    { type: "tab", label: "pinch i m", tab: `e|-0---...` },
-    { type: "chords", chords: ["A", "D", "E"] },
-  ],
-}
-```
-
-Block types today: `text`, `chords`, `tab`, `link` and `counter` (tap to count reps; set `waitForTap: true` on the step to start its timer on the first tap). Reusable steps such as tuning, warm-ups and one-minute changes live in `js/routines/helpers.js`.
-
-- **New routine**: add a file to `js/routines/` and list it in `js/routines/index.js`.
-- **New kind of task** (pitch check, tab player, a quiz...): add a block type to `js/blocks.js` with `render`, and optionally `mount` for interactive behaviour and `check` for validation. Every routine can then use it.
-
-`npm test` checks every routine against the format (known block types, known chords, sensible tempos).
-
-## Code map
-
-- `js/routines/`: the routines, shared step helpers, and the roadmap.
-- `js/blocks.js`: block types a step can contain.
-- `js/routine.js`: routine format and validation.
-- `js/app.js`: routine player, UI and keyboard shortcuts.
-- `js/metronome.js`: Web Audio metronome.
-- `js/chords.js`, `js/chord-diagram.js`: chord shapes and SVG chord boxes.
-- `js/store.js`: localStorage for best scores, history and the last routine.
-
-## Next ideas
-
-Pitch detection as a block that checks notes against a target, more routines along the road to Blackbird (G, C, Em, Am; alternating bass; the Blackbird intro), tab import and play-along.
+Runs the detector against synthesized plucked-string audio (Karplus-Strong). The tests check that it catches every note of an arpeggio while the earlier notes ring, at loud and quiet levels, and that it rejects notes one or two frets off. They also cover the play-along rules: waiting, resuming, looping, and click scheduling.

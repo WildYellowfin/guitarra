@@ -8,68 +8,53 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <header>
+    <section id="landing" class="landing">
       <h1>Guitarra</h1>
-      <div class="picker">
-        <label for="routine" class="muted">Routine</label>
-        <select id="routine"></select>
-      </div>
-      <p id="routine-summary" class="summary"></p>
-      <div class="bar"><div id="progress"></div></div>
-      <p id="total-left" class="muted"></p>
-    </header>
+      <p class="tagline">Play along. It listens, and waits for you.</p>
 
-    <main>
-      <section class="card now">
-        <p id="step-num" class="muted"></p>
-        <h2 id="step-title"></h2>
-        <div id="step-time" class="time">0:00</div>
-        <div class="controls">
-          <button id="prev" aria-label="Previous step">◀</button>
-          <button id="start" class="primary">Start</button>
-          <button id="next" aria-label="Next step">▶</button>
+      <article class="exercise">
+        <h2 id="ex-title"></h2>
+        <p id="ex-desc"></p>
+        <div class="row"><span class="label">Chords</span><span id="ex-chords"></span></div>
+        <div class="row"><span class="label">Each bar</span><span id="ex-pattern" class="pattern"></span></div>
+        <div class="row"><span class="label">Tempo</span><span id="ex-bpm"></span></div>
+        <p id="ex-best" class="muted"></p>
+        <button id="play-btn" class="play-btn">Play <span>↵</span></button>
+      </article>
+
+      <ul class="tips">
+        <li>Sit close to your computer's mic. Allow microphone access when asked.</li>
+        <li>Notes scroll toward the line. Play each one as it reaches the line. Miss it and everything waits until you play it.</li>
+        <li>The click starts with your first note. Space pauses, ↑/↓ change the tempo, Esc leaves.</li>
+      </ul>
+    </section>
+
+    <section id="play" class="play" hidden>
+      <canvas id="stage"></canvas>
+      <header class="hud">
+        <div class="hud-left">
+          <button id="exit" class="ghost" aria-label="Leave">✕</button>
+          <div class="tempo">
+            <button id="slower" class="ghost" aria-label="Slower">−</button>
+            <span><b id="bpm">60</b> BPM</span>
+            <button id="faster" class="ghost" aria-label="Faster">+</button>
+          </div>
+          <span id="beat" class="beat"></span>
         </div>
-        <div id="blocks"></div>
-
-        <div id="finished" hidden>
-          <h3>Session done. Nice work.</h3>
-          <p>Your result is saved in the practice log. Come back tomorrow and try to beat your scores.</p>
-          <button id="restart">Start over</button>
+        <div class="hud-center">
+          <div id="status" class="status"></div>
+          <div id="heard" class="heard"></div>
         </div>
-      </section>
-
-      <section class="card metro">
-        <h2>Metronome</h2>
-        <div class="bpm-row">
-          <button data-bpm="-5">−5</button>
-          <button data-bpm="-1">−1</button>
-          <div><span id="bpm">70</span> <small>BPM</small></div>
-          <button data-bpm="1">+1</button>
-          <button data-bpm="5">+5</button>
+        <div class="hud-right">
+          <div class="stat"><b id="streak">0</b><small>streak</small></div>
+          <div class="stat"><b id="accuracy">–</b><small>on time</small></div>
+          <div class="stat"><b id="loops">0</b><small>loops</small></div>
+          <div class="mic" title="Microphone level"><span>🎙</span><div class="meter"><div id="level"></div></div></div>
+          <button id="pause" class="ghost" aria-label="Pause">❚❚</button>
         </div>
-        <div class="beats"><span class="beat"></span><span class="beat"></span><span class="beat"></span><span class="beat"></span></div>
-        <button id="metro-toggle">Start</button>
-        <label class="muted"><input type="checkbox" id="auto-metro" checked /> Set tempo and start/stop automatically for each step</label>
-      </section>
+      </header>
+    </section>
 
-      <section class="card">
-        <h2>Steps</h2>
-        <ol id="steps" class="steps"></ol>
-      </section>
-
-      <section class="card">
-        <h2>Practice log</h2>
-        <ul id="history" class="history"></ul>
-      </section>
-
-      <section class="card">
-        <h2>Coming up on the road to Blackbird</h2>
-        <ul id="roadmap" class="history"></ul>
-      </section>
-    </main>
-
-    <footer class="muted">Space: start/pause, or count a change · M: metronome</footer>
-
-    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/main.js"></script>
   </body>
 </html>

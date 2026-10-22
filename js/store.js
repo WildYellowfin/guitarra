@@ -1,21 +1,21 @@
-// Practice history and best scores, kept in this browser's localStorage.
+// Per-exercise tempo and best results, kept in this browser's localStorage.
 
-const KEY = "guitarra:v1";
+const KEY = "guitarra:v2";
 
 export function loadStore() {
   try {
     const data = JSON.parse(localStorage.getItem(KEY));
-    if (data) return { best: data.best ?? {}, history: data.history ?? [], lastRoutine: data.lastRoutine };
+    if (data) return { bpm: data.bpm ?? {}, best: data.best ?? {} };
   } catch {
     // Storage blocked or corrupt; start fresh.
   }
-  return { best: {}, history: [] };
+  return { bpm: {}, best: {} };
 }
 
 export function saveStore(store) {
   try {
     localStorage.setItem(KEY, JSON.stringify(store));
   } catch {
-    // Nothing we can do; the session still works without saving.
+    // Nothing we can do; playing still works without saving.
   }
 }
