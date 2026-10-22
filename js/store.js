@@ -5,7 +5,7 @@ const KEY = "guitarra:v1";
 export function loadStore() {
   try {
     const data = JSON.parse(localStorage.getItem(KEY));
-    if (data) return { best: data.best ?? {}, history: data.history ?? [] };
+    if (data) return { best: data.best ?? {}, history: data.history ?? [], lastRoutine: data.lastRoutine };
   } catch {
     // Storage blocked or corrupt; start fresh.
   }

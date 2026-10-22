@@ -1,22 +1,25 @@
-import { SESSIONS, CHORDS, totalMinutes } from "./sessions.js";
+import { ROUTINES, ROADMAP } from "./routines/index.js";
+import { BLOCKS, esc } from "./blocks.js";
+import { totalMinutes, validateRoutine } from "./routine.js";
 import { Metronome } from "./metronome.js";
-import { chordDiagram } from "./chord-diagram.js";
 import { loadStore, saveStore } from "./store.js";
 
 const $ = (sel) => document.querySelector(sel);
-const session = SESSIONS[0];
 const store = loadStore();
 
+ROUTINES.forEach((r) => validateRoutine(r).forEach((e) => console.warn(`Routine problem: ${e}`)));
+
 const state = {
+  routine: ROUTINES.find((r) => r.id === store.lastRoutine) ?? ROUTINES[0],
   index: 0,
-  remainingMs: session.segments[0].minutes * 60_000,
+  remainingMs: 0,
   running: false,
   lastTick: 0,
-  changes: 0,
-  scores: {}, // pair key -> changes counted this session
   practicedMs: 0,
+  scores: {}, // counter id -> best count this session
   done: new Set(),
   finished: false,
+  mounted: [], // live block handles for the current step
 };
 
 let wakeLock = null;
@@ -24,9 +27,7 @@ let wakeLock = null;
 const beatDots = [...document.querySelectorAll(".beat")];
 const metronome = new Metronome({
   bpm: 70,
-  onBeat: (beat) => {
-    beatDots.forEach((d, i) => d.classList.toggle("on", i === beat));
-  },
+  onBeat: (beat) => beatDots.forEach((d, i) => d.classList.toggle("on", i === beat)),
 });
 
 // ---------- formatting ----------
@@ -36,50 +37,89 @@ const fmt = (ms) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 };
 
-const pairKey = (pair) => pair.join("-");
-const segment = () => session.segments[state.index];
+const step = () => state.routine.steps[state.index];
+const stepMs = (s) => s.minutes * 60_000;
 
-function remainingSessionMs() {
-  const later = session.segments.slice(state.index + 1).reduce((sum, s) => sum + s.minutes, 0);
-  return state.remainingMs + later * 60_000;
+function remainingRoutineMs() {
+  return state.remainingMs + state.routine.steps.slice(state.index + 1).reduce((sum, s) => sum + stepMs(s), 0);
 }
 
 // ---------- rendering ----------
 
+function renderPicker() {
+  const groups = new Map();
+  ROUTINES.forEach((r) => {
+    const key = r.path ?? "Other";
+    groups.set(key, [...(groups.get(key) ?? []), r]);
+  });
+  $("#routine").innerHTML = [...groups]
+    .map(
+      ([path, routines]) =>
+        `<optgroup label="${esc(path)}">${routines
+          .sort((a, b) => (a.stage ?? 0) - (b.stage ?? 0))
+          .map((r) => `<option value="${r.id}">${r.stage ? `${r.stage}. ` : ""}${esc(r.title)} (${totalMinutes(r)} min)</option>`)
+          .join("")}</optgroup>`,
+    )
+    .join("");
+  $("#routine").value = state.routine.id;
+}
+
+function renderHeader() {
+  $("#routine-summary").textContent = state.routine.summary ?? "";
+}
+
 function renderList() {
-  $("#segments").innerHTML = session.segments
+  $("#steps").innerHTML = state.routine.steps
     .map((s, i) => {
       const cls = [i === state.index && !state.finished ? "current" : "", state.done.has(i) ? "done" : ""].join(" ");
-      return `<li class="${cls}"><button data-i="${i}"><span>${s.title}</span><span class="mins">${s.minutes} min</span></button></li>`;
+      return `<li class="${cls}"><button data-i="${i}"><span>${esc(s.title)}</span><span class="mins">${s.minutes} min</span></button></li>`;
     })
     .join("");
 }
 
-function renderSegment() {
-  const s = segment();
-  $("#seg-step").textContent = `Step ${state.index + 1} of ${session.segments.length}`;
-  $("#seg-title").textContent = s.title;
-  $("#seg-text").textContent = s.text;
-  const chords = s.type === "changes" ? s.pair : s.chords ?? [];
-  $("#seg-chords").innerHTML = chords.map((c) => chordDiagram(c, CHORDS[c])).join("");
+function renderStep() {
+  unmountBlocks();
+  const s = step();
+  $("#step-num").textContent = `Step ${state.index + 1} of ${state.routine.steps.length}`;
+  $("#step-title").textContent = s.title;
 
-  const isChanges = s.type === "changes";
-  $("#changes").hidden = !isChanges;
-  if (isChanges) {
-    const best = store.best[pairKey(s.pair)];
-    $("#changes-count").textContent = state.changes;
-    $("#changes-best").textContent = best ? `Best: ${best}` : "No score yet. Teachers aim for 30, then 60.";
-  }
+  const ctx = {
+    store,
+    onActivity: () => !state.running && setRunning(true),
+    record: (id, value) => {
+      state.scores[id] = Math.max(state.scores[id] ?? 0, value);
+      store.best[id] = Math.max(store.best[id] ?? 0, value);
+      saveStore(store);
+    },
+  };
+  const container = $("#blocks");
+  container.innerHTML = "";
+  (s.blocks ?? []).forEach((b) => {
+    const type = BLOCKS[b.type];
+    if (!type) return;
+    const el = document.createElement("div");
+    el.className = `block b-${b.type}`;
+    el.innerHTML = type.render(b, ctx);
+    container.append(el);
+    if (type.mount) state.mounted.push(type.mount(el, b, ctx) ?? {});
+  });
+
   renderList();
   renderTime();
 }
 
+function unmountBlocks() {
+  state.mounted.forEach((m) => m.exit?.());
+  state.mounted = [];
+}
+
 function renderTime() {
-  $("#seg-time").textContent = fmt(state.remainingMs);
-  $("#total-left").textContent = `${fmt(remainingSessionMs())} left of ${totalMinutes(session)} min`;
-  const totalMs = totalMinutes(session) * 60_000;
-  $("#progress").style.width = `${(100 * (totalMs - remainingSessionMs())) / totalMs}%`;
-  $("#start").textContent = state.running ? "Pause" : state.remainingMs < segment().minutes * 60_000 ? "Resume" : "Start";
+  $("#step-time").textContent = fmt(state.remainingMs);
+  const totalMs = totalMinutes(state.routine) * 60_000;
+  $("#total-left").textContent = `${fmt(remainingRoutineMs())} left of ${totalMinutes(state.routine)} min`;
+  $("#progress").style.width = `${(100 * (totalMs - remainingRoutineMs())) / totalMs}%`;
+  const fresh = state.remainingMs >= stepMs(step());
+  $("#start").textContent = state.running ? "Pause" : !fresh ? "Resume" : step().waitForTap ? "Tap below to start" : "Start";
 }
 
 function renderMetronome() {
@@ -89,36 +129,43 @@ function renderMetronome() {
 }
 
 function renderHistory() {
+  const titles = Object.fromEntries(ROUTINES.map((r) => [r.id, r.title]));
   const rows = store.history
     .slice(-7)
     .reverse()
     .map((h) => {
-      const scores = Object.entries(h.scores)
-        .map(([k, v]) => `${k.replace("-", "↔")} ${v}`)
+      const scores = Object.entries(h.scores ?? {})
+        .map(([k, v]) => `${esc(k.replace(/^changes:/, "").replace("-", "↔"))} ${v}`)
         .join(", ");
-      return `<li><strong>${new Date(h.date).toLocaleDateString()}</strong> ${h.minutes} min${scores ? ` · ${scores}` : ""}</li>`;
+      return `<li><strong>${new Date(h.date).toLocaleDateString()}</strong> ${esc(titles[h.routine] ?? h.routine)}, ${h.minutes} min${scores ? ` · ${scores}` : ""}</li>`;
     });
   $("#history").innerHTML = rows.length ? rows.join("") : "<li>No sessions logged yet.</li>";
 }
 
-// ---------- session flow ----------
-
-function goTo(i) {
-  saveChangesScore();
-  state.index = i;
-  state.remainingMs = session.segments[i].minutes * 60_000;
-  state.changes = 0;
-  state.finished = false;
-  $("#finished").hidden = true;
-  applySegmentTempo();
-  renderSegment();
+function renderRoadmap() {
+  $("#roadmap").innerHTML = ROADMAP.map(
+    (r) => `<li><strong>${r.stage}. ${esc(r.title)}</strong><br /><span class="muted">${esc(r.summary)}</span></li>`,
+  ).join("");
 }
 
-function applySegmentTempo() {
-  const s = segment();
+// ---------- routine flow ----------
+
+function goTo(i) {
+  state.index = i;
+  state.remainingMs = stepMs(step());
+  state.finished = false;
+  $("#finished").hidden = true;
+  if (step().waitForTap && state.running) setRunning(false);
+  applyStepTempo();
+  renderStep();
+}
+
+function applyStepTempo() {
   if (!$("#auto-metro").checked) return;
-  if (s.bpm) {
-    metronome.setBpm(s.bpm);
+  const m = step().metronome;
+  if (m) {
+    metronome.setBpm(m.bpm);
+    metronome.beatsPerBar = m.beatsPerBar ?? 4;
     if (state.running) metronome.start();
   } else {
     metronome.stop();
@@ -126,35 +173,21 @@ function applySegmentTempo() {
   renderMetronome();
 }
 
-function saveChangesScore() {
-  const s = segment();
-  if (s.type !== "changes" || state.changes === 0) return;
-  const key = pairKey(s.pair);
-  state.scores[key] = Math.max(state.scores[key] ?? 0, state.changes);
-  store.best[key] = Math.max(store.best[key] ?? 0, state.changes);
-  saveStore(store);
-}
-
 function next() {
   state.done.add(state.index);
   metronome.chime();
-  if (state.index + 1 < session.segments.length) {
-    goTo(state.index + 1);
-    // Changes drills start on the first tap, so you can get your hand in place.
-    if (segment().type === "changes") setRunning(false);
-  } else {
-    finish();
-  }
+  if (state.index + 1 < state.routine.steps.length) goTo(state.index + 1);
+  else finish();
 }
 
 function finish() {
-  saveChangesScore();
+  unmountBlocks();
   setRunning(false);
   metronome.stop();
   state.finished = true;
   const minutes = Math.round(state.practicedMs / 60_000);
   if (minutes > 0 || Object.keys(state.scores).length) {
-    store.history.push({ date: new Date().toISOString(), session: session.id, minutes, scores: state.scores });
+    store.history.push({ date: new Date().toISOString(), routine: state.routine.id, minutes, scores: state.scores });
     saveStore(store);
   }
   $("#finished").hidden = false;
@@ -163,11 +196,28 @@ function finish() {
   renderHistory();
 }
 
+function restart() {
+  state.done.clear();
+  state.scores = {};
+  state.practicedMs = 0;
+  goTo(0);
+}
+
+function selectRoutine(id) {
+  if (state.running) setRunning(false);
+  unmountBlocks();
+  state.routine = ROUTINES.find((r) => r.id === id) ?? ROUTINES[0];
+  store.lastRoutine = state.routine.id;
+  saveStore(store);
+  renderHeader();
+  restart();
+}
+
 async function setRunning(running) {
   state.running = running;
   state.lastTick = performance.now();
   if (running) {
-    applySegmentTempo();
+    applyStepTempo();
     try {
       wakeLock = await navigator.wakeLock?.request("screen");
     } catch {
@@ -194,33 +244,20 @@ function tick() {
   requestAnimationFrame(tick);
 }
 
-function countChange() {
-  if (segment().type !== "changes" || state.finished) return;
-  if (!state.running) setRunning(true);
-  state.changes += 1;
-  $("#changes-count").textContent = state.changes;
-}
-
-function restart() {
-  state.done.clear();
-  state.scores = {};
-  state.practicedMs = 0;
-  goTo(0);
-}
-
 // ---------- events ----------
 
+$("#routine").addEventListener("change", (e) => selectRoutine(e.target.value));
 $("#start").addEventListener("click", () => {
   if (state.finished) restart();
+  if (!state.running && step().waitForTap && state.remainingMs >= stepMs(step())) return;
   setRunning(!state.running);
 });
 $("#next").addEventListener("click", next);
 $("#prev").addEventListener("click", () => goTo(Math.max(0, state.index - 1)));
-$("#segments").addEventListener("click", (e) => {
+$("#steps").addEventListener("click", (e) => {
   const btn = e.target.closest("button[data-i]");
   if (btn) goTo(Number(btn.dataset.i));
 });
-$("#tap").addEventListener("click", countChange);
 $("#restart").addEventListener("click", restart);
 
 $("#metro-toggle").addEventListener("click", () => {
@@ -235,19 +272,21 @@ document.querySelectorAll("[data-bpm]").forEach((btn) =>
 );
 
 document.addEventListener("keydown", (e) => {
-  if (e.target.matches("input, textarea")) return;
+  if (e.target.matches("input, textarea, select")) return;
   if (e.code === "Space") {
     e.preventDefault();
-    if (segment().type === "changes") countChange();
+    const handler = state.mounted.find((m) => m.onSpace);
+    if (handler && !state.finished) handler.onSpace();
     else $("#start").click();
   } else if (e.key === "m") {
     $("#metro-toggle").click();
   }
 });
 
-$("#session-title").textContent = session.title;
-$("#session-goal").textContent = session.goal;
-renderSegment();
-renderMetronome();
+renderPicker();
+renderHeader();
+renderRoadmap();
 renderHistory();
+goTo(0);
+renderMetronome();
 requestAnimationFrame(tick);

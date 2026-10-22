@@ -48,8 +48,25 @@ h2 {
   color: var(--muted);
   font-size: 0.9rem;
 }
-.session {
-  margin: 4px 0 12px;
+.picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+select {
+  font: inherit;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+  max-width: 100%;
+  min-width: 0;
+  flex: 1;
+}
+.summary {
+  margin: 8px 0 12px;
 }
 
 .bar {
@@ -110,8 +127,35 @@ button.primary {
 .now {
   text-align: center;
 }
-.now #seg-text {
+.b-text {
   text-align: left;
+}
+.block + .block {
+  margin-top: 12px;
+}
+.b-tab {
+  margin: 0;
+  text-align: left;
+}
+.b-tab figcaption {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+.b-tab pre {
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: 15px/1.35 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+.b-link {
+  text-align: left;
+}
+a {
+  color: var(--accent);
 }
 .time {
   font-size: 4rem;
@@ -145,7 +189,6 @@ button.primary {
   justify-content: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 12px;
 }
 .chord {
   width: 120px;
@@ -221,12 +264,12 @@ button.primary {
   margin-top: 10px;
 }
 
-.segments {
+.steps {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-.segments button {
+.steps button {
   display: flex;
   justify-content: space-between;
   width: 100%;
@@ -236,11 +279,11 @@ button.primary {
   padding: 6px 8px;
   border-radius: 6px;
 }
-.segments .current button {
+.steps .current button {
   background: var(--accent-soft);
   font-weight: 600;
 }
-.segments .done span:first-child::before {
+.steps .done span:first-child::before {
   content: "✓ ";
   color: var(--done);
 }
@@ -253,6 +296,9 @@ button.primary {
 .history {
   padding-left: 18px;
   margin: 0;
+}
+.history li + li {
+  margin-top: 4px;
 }
 
 footer {

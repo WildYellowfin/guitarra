@@ -64,7 +64,7 @@ export class Metronome {
     osc.stop(time + 0.06);
   }
 
-  // A short two-note chime for segment changes.
+  // A short two-note chime between steps.
   chime() {
     this.ctx ??= new AudioContext();
     const t = this.ctx.currentTime;

@@ -10,36 +10,30 @@
   <body>
     <header>
       <h1>Guitarra</h1>
-      <p class="session"><strong id="session-title"></strong> · <span id="session-goal"></span></p>
+      <div class="picker">
+        <label for="routine" class="muted">Routine</label>
+        <select id="routine"></select>
+      </div>
+      <p id="routine-summary" class="summary"></p>
       <div class="bar"><div id="progress"></div></div>
       <p id="total-left" class="muted"></p>
     </header>
 
     <main>
       <section class="card now">
-        <p id="seg-step" class="muted"></p>
-        <h2 id="seg-title"></h2>
-        <div id="seg-time" class="time">0:00</div>
+        <p id="step-num" class="muted"></p>
+        <h2 id="step-title"></h2>
+        <div id="step-time" class="time">0:00</div>
         <div class="controls">
           <button id="prev" aria-label="Previous step">◀</button>
           <button id="start" class="primary">Start</button>
           <button id="next" aria-label="Next step">▶</button>
         </div>
-        <p id="seg-text"></p>
-
-        <div id="changes" hidden>
-          <button id="tap" class="tap">
-            <span id="changes-count">0</span>
-            <small>tap for each change (space bar)</small>
-          </button>
-          <p id="changes-best" class="muted"></p>
-        </div>
-
-        <div id="seg-chords" class="chords"></div>
+        <div id="blocks"></div>
 
         <div id="finished" hidden>
           <h3>Session done. Nice work.</h3>
-          <p>Your result is saved below. Same session tomorrow, and try to beat your change scores.</p>
+          <p>Your result is saved in the practice log. Come back tomorrow and try to beat your scores.</p>
           <button id="restart">Start over</button>
         </div>
       </section>
@@ -59,13 +53,18 @@
       </section>
 
       <section class="card">
-        <h2>Today's plan</h2>
-        <ol id="segments" class="segments"></ol>
+        <h2>Steps</h2>
+        <ol id="steps" class="steps"></ol>
       </section>
 
       <section class="card">
         <h2>Practice log</h2>
         <ul id="history" class="history"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Coming up on the road to Blackbird</h2>
+        <ul id="roadmap" class="history"></ul>
       </section>
     </main>
 
