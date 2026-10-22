@@ -1,0 +1,261 @@
+:root {
+  --bg: #faf7f2;
+  --card: #ffffff;
+  --text: #1f1b16;
+  --muted: #6b645b;
+  --line: #e4ddd2;
+  --accent: #c2410c;
+  --accent-soft: #fde8dc;
+  --done: #15803d;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171412;
+    --card: #221e1a;
+    --text: #f2ede6;
+    --muted: #a39b90;
+    --line: #3a332c;
+    --accent: #fb923c;
+    --accent-soft: #3b2417;
+    --done: #4ade80;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0 auto;
+  max-width: 980px;
+  padding: 16px;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+h2 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+}
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.session {
+  margin: 4px 0 12px;
+}
+
+.bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--line);
+  overflow: hidden;
+}
+#progress {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  transition: width 0.3s linear;
+}
+
+main {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+  margin-top: 16px;
+}
+@media (min-width: 760px) {
+  main {
+    grid-template-columns: 3fr 2fr;
+  }
+  .now {
+    grid-row: span 2;
+  }
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+button {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+button:hover {
+  border-color: var(--accent);
+}
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  min-width: 120px;
+  font-weight: 600;
+}
+
+.now {
+  text-align: center;
+}
+.now #seg-text {
+  text-align: left;
+}
+.time {
+  font-size: 4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  margin: 8px 0;
+}
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tap {
+  display: block;
+  width: 100%;
+  padding: 18px;
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.tap span {
+  display: block;
+  font-size: 3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.chords {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+.chord {
+  width: 120px;
+}
+.cd-name {
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: var(--text);
+}
+.cd-line {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+.cd-nut {
+  stroke: var(--text);
+  stroke-width: 4;
+}
+.cd-dot {
+  fill: var(--accent);
+}
+.cd-open {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+.cd-mark {
+  font-size: 13px;
+  text-anchor: middle;
+  fill: var(--muted);
+}
+.cd-finger {
+  font-size: 10px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: #fff;
+}
+
+.metro {
+  text-align: center;
+}
+.bpm-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.bpm-row div {
+  min-width: 90px;
+}
+#bpm {
+  font-size: 2.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.beats {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+.beat {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.beat.on {
+  background: var(--accent);
+}
+.metro label {
+  display: block;
+  margin-top: 10px;
+}
+
+.segments {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.segments button {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+.segments .current button {
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+.segments .done span:first-child::before {
+  content: "✓ ";
+  color: var(--done);
+}
+.mins {
+  color: var(--muted);
+  white-space: nowrap;
+  padding-left: 8px;
+}
+
+.history {
+  padding-left: 18px;
+  margin: 0;
+}
+
+footer {
+  text-align: center;
+  margin-top: 16px;
+}

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guitarra</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Guitarra</h1>
+      <p class="session"><strong id="session-title"></strong> · <span id="session-goal"></span></p>
+      <div class="bar"><div id="progress"></div></div>
+      <p id="total-left" class="muted"></p>
+    </header>
+
+    <main>
+      <section class="card now">
+        <p id="seg-step" class="muted"></p>
+        <h2 id="seg-title"></h2>
+        <div id="seg-time" class="time">0:00</div>
+        <div class="controls">
+          <button id="prev" aria-label="Previous step">◀</button>
+          <button id="start" class="primary">Start</button>
+          <button id="next" aria-label="Next step">▶</button>
+        </div>
+        <p id="seg-text"></p>
+
+        <div id="changes" hidden>
+          <button id="tap" class="tap">
+            <span id="changes-count">0</span>
+            <small>tap for each change (space bar)</small>
+          </button>
+          <p id="changes-best" class="muted"></p>
+        </div>
+
+        <div id="seg-chords" class="chords"></div>
+
+        <div id="finished" hidden>
+          <h3>Session done. Nice work.</h3>
+          <p>Your result is saved below. Same session tomorrow, and try to beat your change scores.</p>
+          <button id="restart">Start over</button>
+        </div>
+      </section>
+
+      <section class="card metro">
+        <h2>Metronome</h2>
+        <div class="bpm-row">
+          <button data-bpm="-5">−5</button>
+          <button data-bpm="-1">−1</button>
+          <div><span id="bpm">70</span> <small>BPM</small></div>
+          <button data-bpm="1">+1</button>
+          <button data-bpm="5">+5</button>
+        </div>
+        <div class="beats"><span class="beat"></span><span class="beat"></span><span class="beat"></span><span class="beat"></span></div>
+        <button id="metro-toggle">Start</button>
+        <label class="muted"><input type="checkbox" id="auto-metro" checked /> Set tempo and start/stop automatically for each step</label>
+      </section>
+
+      <section class="card">
+        <h2>Today's plan</h2>
+        <ol id="segments" class="segments"></ol>
+      </section>
+
+      <section class="card">
+        <h2>Practice log</h2>
+        <ul id="history" class="history"></ul>
+      </section>
+    </main>
+
+    <footer class="muted">Space: start/pause, or count a change · M: metronome</footer>
+
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
